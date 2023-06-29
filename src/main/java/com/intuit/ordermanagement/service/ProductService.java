@@ -2,6 +2,7 @@ package com.intuit.ordermanagement.service;
 
 import com.intuit.ordermanagement.core.dao.ProductsDao;
 import com.intuit.ordermanagement.core.entities.Product;
+import com.intuit.ordermanagement.integrations.request.PriceDetailsRequest;
 import com.intuit.ordermanagement.service.enums.CategoryEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,5 +18,10 @@ public class ProductService implements IProductService{
     @Override
     public List<Product> findByCategory(CategoryEnum category) {
        return  productsDao.findByCategory(category);
+    }
+
+    @Override
+    public Object findFinalPriceForProducts(PriceDetailsRequest priceDetailsRequest) {
+        return null;
     }
 }
