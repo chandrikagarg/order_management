@@ -1,6 +1,7 @@
 package com.intuit.ordermanagement.controller;
 
 import com.intuit.ordermanagement.core.dto.AdressDetails;
+import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.request.PriceDetailsRequest;
 import com.intuit.ordermanagement.service.IProductService;
 import com.intuit.ordermanagement.service.enums.CategoryEnum;
@@ -19,8 +20,13 @@ public class ProductsController {
         return productService.findByCategory(CategoryEnum.valueOf(category));
     }
     @PostMapping(value = "/getFinalPrice")
-    public Object findFinalPrice(@RequestBody PriceDetailsRequest priceDetailsRequest){
+    public Object findFinalPrice(@RequestBody PriceDetailsRequest priceDetailsRequest) throws Exception {
         return productService.findFinalPriceForProducts(priceDetailsRequest);
     }
+    @PostMapping(value = "/placeOrder")
+    public Object placeOrder(@RequestBody PlaceOrderRequest placeOrderRequest){
+        return productService.placeOrderForProducts(placeOrderRequest);
+    }
+
 
 }

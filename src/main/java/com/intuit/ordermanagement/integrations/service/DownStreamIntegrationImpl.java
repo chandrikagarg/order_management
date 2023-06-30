@@ -1,11 +1,11 @@
 package com.intuit.ordermanagement.integrations.service;
 
-import com.intuit.ordermanagement.core.dto.AdressDetails;
-import com.intuit.ordermanagement.core.entities.Product;
 import com.intuit.ordermanagement.integrations.exceptions.DownSTreamException;
+import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.request.PriceDetailsRequest;
 import com.intuit.ordermanagement.integrations.response.DownStreamServiceBaseResponse;
 import com.intuit.ordermanagement.integrations.response.MessageApiResponse;
+import com.intuit.ordermanagement.integrations.response.PlaceOrderResponse;
 import com.intuit.ordermanagement.integrations.response.PriceDetailsResponse;
 import com.intuit.ordermanagement.integrations.utils.DownStreamOperation;
 import com.intuit.ordermanagement.integrations.utils.ErrorCode;
@@ -16,14 +16,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.http.HttpHeaders;
-import java.text.MessageFormat;
-import java.util.List;
 import java.util.concurrent.*;
 
 @Slf4j
@@ -58,11 +54,35 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration{
 
         }catch (HttpClientErrorException e){
             priceDetailsResponse = jsonHelper.fromJson(e.getResponseBodyAsString(), PriceDetailsResponse.class);
-            log.error("Xtra ops Dashboard menu config API failure response : {}", jsonHelper.toJsonPretty(priceDetailsResponse), e);
+            log.error("Downstream service get products price failure response : {}", jsonHelper.toJsonPretty(priceDetailsResponse), e);
             throw new DownSTreamException(new ErrorCode("DOWN_STR_01","Unable to hit downstream service"));
 
         }
     }
+
+    @Override
+    public Object placeOrder(PlaceOrderRequest placeOrderRequest) throws Exception {
+        HttpEntity httpEntity = new HttpEntity(placeOrderRequest);
+
+        String url = buildDownStreamServiceUrl(DownStreamOperation.PLACE_ORDER);
+        url = UriComponentsBuilder.fromHttpUrl(url).toUriString();
+
+        PlaceOrderResponse priceDetailsResponse;
+
+        try{
+            String finalurl = url;
+            CompletableFuture<ResponseEntity<String>> future = CompletableFuture.supplyAsync(()->
+                    restTemplate.exchange(finalurl, HttpMethod.POST,httpEntity,String.class),executor);
+
+            priceDetailsResponse = getDataResponse(future,PlaceOrderResponse.class,"DownStream Place order  API Response");
+            return  priceDetailsResponse;
+
+        }catch (HttpClientErrorException e){
+            priceDetailsResponse = jsonHelper.fromJson(e.getResponseBodyAsString(), PlaceOrderResponse.class);
+            log.error("Downstream service place order  failure response : {}", jsonHelper.toJsonPretty(priceDetailsResponse), e);
+            throw new DownSTreamException(new ErrorCode("DOWN_STR_01","Unable to hit downstream service"));
+
+        }    }
 
     private <V extends DownStreamServiceBaseResponse> V  getDataResponse(CompletableFuture<ResponseEntity<String>> future,
                                                  Class<V> responseType,
@@ -88,6 +108,8 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration{
 
             case GET_FINAL_PRICE_DETAILS:
                 return "get/final/price";
+            case PLACE_ORDER:
+                return "place/order";
             default:
                 throw new IllegalArgumentException("Invalid operation");
 
