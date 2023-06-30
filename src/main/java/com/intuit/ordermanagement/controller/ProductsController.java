@@ -24,7 +24,7 @@ public class ProductsController {
         return productService.findFinalPriceForProducts(priceDetailsRequest);
     }
     @PostMapping(value = "/placeOrder")
-    public Object placeOrder(@RequestBody PlaceOrderRequest placeOrderRequest){
+    public Object placeOrder(@RequestBody PlaceOrderRequest placeOrderRequest) throws Exception {
         return productService.placeOrderForProducts(placeOrderRequest);
     }
 
