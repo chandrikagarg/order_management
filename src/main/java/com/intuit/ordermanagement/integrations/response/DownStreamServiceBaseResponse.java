@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @Data
 public class DownStreamServiceBaseResponse {
 
+    @JsonProperty
+    private Object data;
+
     @JsonProperty("success")
     private  Boolean success;
 
