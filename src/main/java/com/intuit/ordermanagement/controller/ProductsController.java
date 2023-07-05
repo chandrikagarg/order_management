@@ -1,6 +1,5 @@
 package com.intuit.ordermanagement.controller;
 
-import com.intuit.ordermanagement.core.dto.AdressDetails;
 import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.request.PriceDetailsRequest;
 import com.intuit.ordermanagement.service.IProductService;

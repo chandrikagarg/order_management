@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Builder
 public class PriceDetailsResponse extends  DownStreamServiceBaseResponse{
@@ -17,13 +19,10 @@ public class PriceDetailsResponse extends  DownStreamServiceBaseResponse{
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class DataObject {
 
-        @JsonProperty("price")
-        private Double price;
+        @JsonProperty("basePrice")
+        private Double basePrice;
 
         @JsonProperty("taxes")
         private Double taxes;

@@ -1,9 +1,13 @@
 package com.intuit.ordermanagement.integrations.exceptions;
 
 import com.intuit.ordermanagement.integrations.utils.ErrorCode;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Data
 public class DownSTreamException extends RuntimeException {
