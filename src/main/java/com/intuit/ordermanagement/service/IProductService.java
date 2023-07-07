@@ -11,7 +11,7 @@ public interface IProductService {
 
     List<Product> findByCategory(CategoryEnum category);
 
-    Object findFinalPriceForProducts(PriceDetailsRequest priceDetailsRequest) throws Exception;
+    Object findFinalPriceForProducts(String productId, String userId, String addressId) throws Exception;
 
     Object placeOrderForProducts(PlaceOrderRequest placeOrderRequest) throws Exception;
 }

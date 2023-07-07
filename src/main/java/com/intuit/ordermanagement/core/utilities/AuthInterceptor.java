@@ -13,7 +13,7 @@
 //public class AuthInterceptor extends HandlerInterceptorAdapter {
 //
 //    @Autowired
-//    private AuthInterceptorService authInterceptorService;
+//    private AuthInterceptorService;
 //
 //    @Override
 //    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {

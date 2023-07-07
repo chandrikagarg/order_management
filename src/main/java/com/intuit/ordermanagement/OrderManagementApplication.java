@@ -8,9 +8,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.intuit.ordermanagement.controller.utilities"})
-@EnableJpaRepositories
-@EntityScan
 public class OrderManagementApplication {
 
 	public static void main(String[] args) {

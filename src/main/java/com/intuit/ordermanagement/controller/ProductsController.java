@@ -18,9 +18,9 @@ public class ProductsController {
     public Object findAllProducts(@RequestParam String category){
         return productService.findByCategory(CategoryEnum.valueOf(category));
     }
-    @PostMapping(value = "/getFinalPrice")
-    public Object findFinalPrice(@RequestBody PriceDetailsRequest priceDetailsRequest) throws Exception {
-        return productService.findFinalPriceForProducts(priceDetailsRequest);
+    @GetMapping("/products/{productId}/price")
+    public Object findFinalPrice(@RequestHeader String userId, @RequestParam String addressId, @PathVariable String productId) throws Exception {
+        return productService.findFinalPriceForProducts(productId,userId,addressId);
     }
     @PostMapping(value = "/placeOrder")
     public Object placeOrder(@RequestBody PlaceOrderRequest placeOrderRequest) throws Exception {

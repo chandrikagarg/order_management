@@ -26,8 +26,8 @@ public class ProductService implements IProductService{
     }
 
     @Override
-    public Object findFinalPriceForProducts(PriceDetailsRequest priceDetailsRequest) throws Exception {
-        return downStreamIntegration.getFinalProductDetails(priceDetailsRequest);
+    public Object findFinalPriceForProducts(String productId, String userId, String addressId) throws Exception {
+        return downStreamIntegration.getBasePriceForProduct(productId,userId,addressId);
     }
 
     @Override
