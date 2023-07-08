@@ -1,6 +1,7 @@
 package com.intuit.ordermanagement.service;
 
 import com.intuit.ordermanagement.core.entities.Product;
+import com.intuit.ordermanagement.integrations.request.CallbackPaymentRequest;
 import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.request.PriceDetailsRequest;
 import com.intuit.ordermanagement.service.enums.CategoryEnum;
@@ -15,4 +16,8 @@ public interface IProductService {
     OrderMgmtAPIResponse findFinalPriceForProducts(String productId, String userId, String addressId) throws Exception;
 
     OrderMgmtAPIResponse placeOrderForProducts(String userId, PlaceOrderRequest placeOrderRequest) throws Exception;
+
+    OrderMgmtAPIResponse getOrderStatus(String userId, String orderId);
+
+    OrderMgmtAPIResponse getPaymentCallback(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception;
 }

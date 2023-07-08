@@ -8,7 +8,9 @@ import com.intuit.ordermanagement.core.entities.OrderUserDetailsMapping;
 import com.intuit.ordermanagement.core.entities.Product;
 import com.intuit.ordermanagement.integrations.exceptions.DownSTreamException;
 import com.intuit.ordermanagement.integrations.exceptions.OrderNotCreatedException;
+import com.intuit.ordermanagement.integrations.request.CallbackPaymentRequest;
 import com.intuit.ordermanagement.integrations.request.OrderInitiationRequest;
+import com.intuit.ordermanagement.integrations.request.OrderSubmitRequest;
 import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.response.DownStreamServiceBaseResponse;
 import com.intuit.ordermanagement.integrations.response.MessageApiResponse;
@@ -18,6 +20,7 @@ import com.intuit.ordermanagement.integrations.service.IDownStreamIntegration;
 import com.intuit.ordermanagement.integrations.utils.ErrorCode;
 import com.intuit.ordermanagement.service.enums.CategoryEnum;
 import com.intuit.ordermanagement.service.enums.OrderStatusEnum;
+import com.intuit.ordermanagement.service.enums.PaymentStatusEnum;
 import com.intuit.ordermanagement.service.response.OrderMgmtAPIResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,8 +72,9 @@ public class ProductService implements IProductService{
     public OrderMgmtAPIResponse placeOrderForProducts(String userId, PlaceOrderRequest placeOrderRequest) throws Exception {
         String orderId = generateRandomId();
         String requestId = generateRandomId();
+        OrderProductsMapping orderProductsMapping;
         try{
-            OrderProductsMapping orderProductsMapping = OrderProductsMapping.builder().productId(placeOrderRequest.getProductId()).orderId(orderId).productsStatus(OrderStatusEnum.INITIATED).build();
+            orderProductsMapping = OrderProductsMapping.builder().productId(placeOrderRequest.getProductId()).orderId(orderId).productsStatus(OrderStatusEnum.INITIATED).build();
             OrderUserDetailsMapping orderUserDetailsMapping = OrderUserDetailsMapping.builder().orderId(orderId).requestId(requestId).amount(placeOrderRequest.getAmount()).addressId(placeOrderRequest.getAddressId()).build();
             orderUserDetailsMappingDao.save(orderUserDetailsMapping);
             orderProductsMappingDao.save(orderProductsMapping);
@@ -87,6 +91,8 @@ public class ProductService implements IProductService{
 
         DownStreamServiceBaseResponse downStreamServiceBaseResponse = downStreamIntegration.informOrderInitiation(userId,orderInitiationRequest);
         if(downStreamServiceBaseResponse.getSuccess()){
+            orderProductsMapping.setProductsStatus(OrderStatusEnum.PAYMENT_REQ_ACK);
+            orderProductsMappingDao.save(orderProductsMapping);
             Map<String, Object> response = new HashMap<>();
             response.put("orderId", orderId);
             response.put("requestId",requestId);
@@ -94,6 +100,51 @@ public class ProductService implements IProductService{
         }
         MessageApiResponse messageApiResponse = MessageApiResponse.builder().text("Error in creating order Please try again after some time").code("UPS_02").build();
         return OrderMgmtAPIResponse.buildFailure(messageApiResponse);
+    }
+
+    @Override
+    public OrderMgmtAPIResponse getOrderStatus(String userId, String orderId) {
+        OrderProductsMapping orderProductsMapping = orderProductsMappingDao.findByOrderId(orderId);
+        OrderStatusEnum orderStatusEnum = orderProductsMapping.getProductsStatus();
+        String message = getOrderStatusMessage(orderStatusEnum);
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", orderStatusEnum.name());
+        response.put("message", message);
+        return OrderMgmtAPIResponse.buildSuccess(response);
+
+    }
+
+    @Override
+    public OrderMgmtAPIResponse getPaymentCallback(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception {
+        String paymentStatus = callbackPaymentRequest.getPaymentStatus();
+        if(paymentStatus.equals(PaymentStatusEnum.SUCCESS.name())){
+            String requestId = callbackPaymentRequest.getRequestId();
+            OrderUserDetailsMapping orderUserDetailsMapping = orderUserDetailsMappingDao.findByRequestId(requestId);
+            OrderProductsMapping orderProductsMapping = orderProductsMappingDao.findByOrderId(orderUserDetailsMapping.getOrderId());
+            OrderSubmitRequest orderSubmitRequest = OrderSubmitRequest.builder()
+                    .productId(orderProductsMapping.getProductId())
+                    .addressId(orderUserDetailsMapping.getAddressId())
+                    .orderId(orderUserDetailsMapping.getOrderId())
+                    .amount(orderUserDetailsMapping.getAmount()).build();
+
+            downStreamIntegration.submitOrderForBilling(orderSubmitRequest, userId);
+            publishEventforSendingEmail(userId);
+
+        }else if(paymentStatus.equals(PaymentStatusEnum.FAILED.name())){
+            publishEventforSendingEmail(userId);
+
+        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "CAllbackreceived successfullt");
+        return OrderMgmtAPIResponse.buildSuccess(response);
+
+    }
+
+    private void publishEventforSendingEmail(String userId) {
+    }
+
+    private String getOrderStatusMessage(OrderStatusEnum orderStatusEnum) {
+        return "Order placed successfully";
     }
 
     private String generateRandomId() {

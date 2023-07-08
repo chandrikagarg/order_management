@@ -6,4 +6,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface OrderProductsMappingDao extends JpaRepository<OrderProductsMapping,Long> {
 
+    OrderProductsMapping findByOrderId(String orderId);
+
+
 }

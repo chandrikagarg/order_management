@@ -2,6 +2,7 @@ package com.intuit.ordermanagement.integrations.service;
 
 import com.intuit.ordermanagement.integrations.exceptions.DownSTreamException;
 import com.intuit.ordermanagement.integrations.request.OrderInitiationRequest;
+import com.intuit.ordermanagement.integrations.request.OrderSubmitRequest;
 import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.request.PriceDetailsRequest;
 import com.intuit.ordermanagement.integrations.response.*;
@@ -100,12 +101,12 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
     }
 
     @Override
-    public DownStreamServiceBaseResponse placeOrder(PlaceOrderRequest placeOrderRequest, String userId) throws Exception {
+    public DownStreamServiceBaseResponse submitOrderForBilling(OrderSubmitRequest placeOrderRequest, String userId) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.add("apiKey", "api-key");
         headers.add("apiPasscode", "api-passcode");
         headers.add("userId", userId);
-        HttpEntity<PlaceOrderRequest> httpEntity = new HttpEntity<>(placeOrderRequest, headers);
+        HttpEntity<OrderSubmitRequest> httpEntity = new HttpEntity<>(placeOrderRequest, headers);
 
         String url = buildDownStreamServiceUrl(DownStreamOperation.PLACE_ORDER);
         url = UriComponentsBuilder.fromHttpUrl(url)
@@ -218,7 +219,7 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
             case ORDER_INITIATE_PG_SERVICE:
                 return "http://localhost:8081/dns/order/initiate";
             case PLACE_ORDER:
-                return "https://order-service/dns/order";
+                return "http://localhost:8081/dns/submit/order";
             case SEND_EMAIL:
                 return "https://email-service/dns/email";
             default:

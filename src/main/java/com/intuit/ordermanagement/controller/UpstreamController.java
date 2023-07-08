@@ -1,5 +1,6 @@
 package com.intuit.ordermanagement.controller;
 
+import com.intuit.ordermanagement.integrations.request.CallbackPaymentRequest;
 import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.service.IProductService;
 import com.intuit.ordermanagement.service.enums.CategoryEnum;
@@ -24,6 +25,14 @@ public class UpstreamController {
     @PostMapping(value = "/placeOrder")
     public Object placeOrder(@RequestHeader String userId, @RequestBody PlaceOrderRequest placeOrderRequest) throws Exception {
         return productService.placeOrderForProducts(userId, placeOrderRequest);
+    }
+    @GetMapping("/order/{orderId}")
+    public Object findFinalPrice(@RequestHeader String userId, @PathVariable String orderId) throws Exception {
+        return productService.getOrderStatus(userId, orderId);
+    }
+    @PostMapping("/callback")
+    public Object getCallbackForPayment(@RequestHeader String userId, @RequestBody CallbackPaymentRequest callbackPaymentRequest) throws Exception {
+        return productService.getPaymentCallback(userId, callbackPaymentRequest);
     }
 
 
