@@ -127,8 +127,9 @@ public class ProductService implements IUpstreamService {
     @Override
     public OrderMgmtAPIResponse updatePaymentStatus(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception {
         String paymentStatus = callbackPaymentRequest.getPaymentStatus();
-
         String requestId = callbackPaymentRequest.getRequestId();
+
+        log.info("Callback request received for user {} for requestid {}",userId,requestId);
         OrderUserDetailsMapping orderUserDetailsMapping = orderUserDetailsMappingDao.findByRequestId(requestId);
         OrderProductsMapping orderProductsMapping = orderProductsMappingDao.findByOrderId(orderUserDetailsMapping.getOrderId());
         if(paymentStatus.equals(PaymentStatusEnum.SUCCESS.name())){
@@ -139,13 +140,20 @@ public class ProductService implements IUpstreamService {
                     .amount(orderUserDetailsMapping.getAmount()).build();
             orderProductsMapping.setProductsStatus(OrderStatusEnum.PAYMENT_SUCCESS);
             orderProductsMappingDao.save(orderProductsMapping);
+            log.info("Updated the order payment status to success for user {} for requestid {}",userId,requestId);
+
             downStreamIntegration.submitOrderForBilling(orderSubmitRequest, userId);
+            log.info("Processed the order for billing for user {} and order Id {}",userId,orderUserDetailsMapping.getOrderId());
+
             publishEventforSendingEmail(userId);
+            log.info("published the event for sending email for the for user {} and order Id {}",userId,orderUserDetailsMapping.getOrderId());
 
         }else if(paymentStatus.equals(PaymentStatusEnum.FAILED.name())){
             orderProductsMapping.setProductsStatus(OrderStatusEnum.PAYMENT_FAILED);
             orderProductsMappingDao.save(orderProductsMapping);
+            log.info("Updated the order payment status to failed for user {} for requestid {}",userId,requestId);
             publishEventforSendingEmail(userId);
+            log.info("published the event for sending email for the for user {} and order Id {}",userId,orderUserDetailsMapping.getOrderId());
         }
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Callback received successfullt");
