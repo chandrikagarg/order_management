@@ -14,6 +14,7 @@ public class TaxDetailsResponse extends  DownStreamServiceBaseResponse{
     @JsonProperty("data")
     private DataObject dataObject;
 
+    @Setter
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
