@@ -9,8 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PlaceOrderRequest {
+public class OrderInitiationRequest {
     private String addressId;
     private Double amount;
     private String productId;
+    private String orderId;
+    private String requestId;
 }

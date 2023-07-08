@@ -1,6 +1,7 @@
 package com.intuit.ordermanagement.integrations.service;
 
 import com.intuit.ordermanagement.integrations.exceptions.DownSTreamException;
+import com.intuit.ordermanagement.integrations.request.OrderInitiationRequest;
 import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.request.PriceDetailsRequest;
 import com.intuit.ordermanagement.integrations.response.*;
@@ -36,12 +37,12 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
     @Override
     public PriceDetailsResponse getBasePriceForProduct(String productId, String userId, String addressId) throws Exception {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("x-api-key", "api-key");
-        headers.add("x-api-passcode", "api-passcode");
+        headers.add("apiKey", "api-key");
+        headers.add("apiPasscode", "api-passcode");
         headers.add("userId", userId);
         HttpEntity httpEntity = new HttpEntity(headers);
 
-        String url = buildDownStreamServiceUrl(DownStreamOperation.GET_FINAL_PRICE_DETAILS);
+        String url = buildDownStreamServiceUrl(DownStreamOperation.GET_PRICE_DETAILS);
         url = UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("addressId", addressId)
                 .queryParam("productId", productId)
@@ -68,12 +69,12 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
     @Override
     public TaxDetailsResponse getTaxDetailsForProduct(Double price, String productId, String userId, String addressId) throws Exception {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("x-api-key", "api-key");
-        headers.add("x-api-passcode", "api-passcode");
+        headers.add("apiKey", "api-key");
+        headers.add("apiPasscode", "api-passcode");
         headers.add("userId", userId);
         HttpEntity httpEntity = new HttpEntity(headers);
 
-        String url = buildDownStreamServiceUrl(DownStreamOperation.PLACE_ORDER);
+        String url = buildDownStreamServiceUrl(DownStreamOperation.GET_TAX_DETAILS);
         url = UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("addressId", addressId)
                 .queryParam("productId", productId)
@@ -99,10 +100,11 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
     }
 
     @Override
-    public DownStreamServiceBaseResponse placeOrder(PlaceOrderRequest placeOrderRequest) throws Exception {
+    public DownStreamServiceBaseResponse placeOrder(PlaceOrderRequest placeOrderRequest, String userId) throws Exception {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("x-api-key", "api-key");
-        headers.add("x-api-passcode", "api-passcode");
+        headers.add("apiKey", "api-key");
+        headers.add("apiPasscode", "api-passcode");
+        headers.add("userId", userId);
         HttpEntity<PlaceOrderRequest> httpEntity = new HttpEntity<>(placeOrderRequest, headers);
 
         String url = buildDownStreamServiceUrl(DownStreamOperation.PLACE_ORDER);
@@ -127,14 +129,45 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
         }
     }
 
-    @Override
-    public DownStreamServiceBaseResponse sendEmail(PlaceOrderRequest placeOrderRequest) throws Exception {
+    public DownStreamServiceBaseResponse informOrderInitiation(String userId, OrderInitiationRequest placeOrderRequest) throws Exception {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("x-api-key", "api-key");
-        headers.add("x-api-passcode", "api-passcode");
+        headers.add("apiKey", "api-key");
+        headers.add("apiPasscode", "api-passcode");
+        headers.add("userId", userId);
+        HttpEntity<OrderInitiationRequest> httpEntity = new HttpEntity<>(placeOrderRequest, headers);
+
+        String url = buildDownStreamServiceUrl(DownStreamOperation.ORDER_INITIATE_PG_SERVICE);
+        url = UriComponentsBuilder.fromHttpUrl(url)
+                .toUriString();
+
+        DownStreamServiceBaseResponse priceDetailsResponse;
+
+        try {
+            String finalurl = url;
+            CompletableFuture<ResponseEntity<String>> future = CompletableFuture.supplyAsync(() ->
+                    restTemplate.exchange(finalurl, HttpMethod.POST, httpEntity, String.class), executor);
+
+            priceDetailsResponse = getDataResponse(future, DownStreamServiceBaseResponse.class, "DownStream  detailsOrder initiation request  API Response");
+            return priceDetailsResponse;
+
+        } catch (HttpClientErrorException e) {
+            priceDetailsResponse = jsonHelper.fromJson(e.getResponseBodyAsString(), DownStreamServiceBaseResponse.class);
+            log.error("Order Initiation payment service failure response : {}", jsonHelper.toJsonPretty(priceDetailsResponse), e);
+            throw new DownSTreamException(new ErrorCode("DOWN_STR_01", "Unable to hit Order Inititaion Request Payment service"));
+
+        }
+    }
+
+    @Override
+    public DownStreamServiceBaseResponse sendEmail(PlaceOrderRequest placeOrderRequest, String userId) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("apiKey", "api-key");
+        headers.add("apiPasscode", "api-passcode");
+        headers.add("userId", userId);
+
         HttpEntity<PlaceOrderRequest> httpEntity = new HttpEntity<>(placeOrderRequest, headers);
 
-        String url = buildDownStreamServiceUrl(DownStreamOperation.PLACE_ORDER);
+        String url = buildDownStreamServiceUrl(DownStreamOperation.SEND_EMAIL);
         url = UriComponentsBuilder.fromHttpUrl(url)
                 .toUriString();
 
@@ -178,10 +211,16 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
     private String buildDownStreamServiceUrl(DownStreamOperation downStreamOperation) {
         switch (downStreamOperation) {
 
-            case GET_FINAL_PRICE_DETAILS:
-                return "get/final/price";
+            case GET_PRICE_DETAILS:
+                return "http://localhost:8081/dns/product/price";
+            case GET_TAX_DETAILS:
+                return "http://localhost:8081/dns/product/tax";
+            case ORDER_INITIATE_PG_SERVICE:
+                return "http://localhost:8081/dns/order/initiate";
             case PLACE_ORDER:
-                return "place/order";
+                return "https://order-service/dns/order";
+            case SEND_EMAIL:
+                return "https://email-service/dns/email";
             default:
                 throw new IllegalArgumentException("Invalid operation");
 

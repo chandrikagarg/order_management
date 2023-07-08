@@ -3,10 +3,7 @@ package com.intuit.ordermanagement.integrations.response;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,6 +14,7 @@ public class PriceDetailsResponse extends  DownStreamServiceBaseResponse{
     @JsonProperty("data")
     private DataObject dataObject;
 
+    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class DataObject {

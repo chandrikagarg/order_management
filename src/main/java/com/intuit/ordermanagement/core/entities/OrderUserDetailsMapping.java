@@ -1,6 +1,5 @@
 package com.intuit.ordermanagement.core.entities;
 
-import com.intuit.ordermanagement.service.enums.OrderStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,8 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @Setter
 @Builder
-@Table(name = "order_products_mapping")
-public class OrderProductsMapping {
+@Table(name = "order_user_details_mapping")
+public class OrderUserDetailsMapping {
 
     private static final long serialVersionUIZD = 1L;
 
@@ -24,10 +23,13 @@ public class OrderProductsMapping {
     @Column(name = "order_id")
     private String orderId;
 
-    @Column(name = "product_id")
-    private String productId;
+    @Column(name = "request_id")
+    private String requestId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "product_status")
-    private OrderStatusEnum productsStatus;
+    @Column(name = "amount")
+    private Double amount;
+
+    @Column(name = "address_id")
+    private String addressId;
+
 }
