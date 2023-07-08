@@ -23,6 +23,10 @@ public class OrderUserDetailsMapping {
     @Column(name = "order_id")
     private String orderId;
 
+    @Column(name = "user_id")
+    private String userId;
+
+
     @Column(name = "request_id")
     private String requestId;
 

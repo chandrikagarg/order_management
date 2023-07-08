@@ -17,12 +17,31 @@ import java.util.Map;
 public class GlobalExceptionalHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(OrderNotCreatedException.class)
-    public ResponseEntity<OrderMgmtAPIResponse> handleUpgradeAccountException(OrderNotCreatedException ex) {
+    public ResponseEntity<OrderMgmtAPIResponse> handleOrderNotCreatedExceptiom(OrderNotCreatedException ex) {
         log.error("OrderNotCreatedException {}", ex);
-        Map<String, String> data = new HashMap<>();
-        data.put("message", ex.getMessage());
          MessageApiResponse messageApiResponse = MessageApiResponse.builder().text(ex.getErrorCode().getInstantDisplayMessage()).code(ex.getErrorCode().getCode()).build();
         return new ResponseEntity<>(OrderMgmtAPIResponse.buildFailure(messageApiResponse), HttpStatus.OK);
     }
+
+    @ExceptionHandler(DownSTreamException.class)
+    public ResponseEntity<OrderMgmtAPIResponse> handleDownSTreamException(DownSTreamException ex) {
+        log.error("DownSTreamException {}", ex);
+        MessageApiResponse messageApiResponse = MessageApiResponse.builder()
+                .text(ex.getErrorCode().getInstantDisplayMessage())
+                .code(ex.getErrorCode().getCode())
+                .build();
+        return new ResponseEntity<>(OrderMgmtAPIResponse.buildFailure(messageApiResponse), HttpStatus.OK);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<OrderMgmtAPIResponse> handleException(Exception ex) {
+        log.error("Unhandled Exception", ex);
+        MessageApiResponse messageApiResponse = MessageApiResponse.builder()
+                .text("An unexpected error occurred.")
+                .code("EOO")
+                .build();
+        return new ResponseEntity<>(OrderMgmtAPIResponse.buildFailure(messageApiResponse), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }
 
