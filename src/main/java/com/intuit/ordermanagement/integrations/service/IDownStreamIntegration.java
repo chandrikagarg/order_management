@@ -9,7 +9,7 @@ import com.intuit.ordermanagement.integrations.response.PriceDetailsResponse;
 import com.intuit.ordermanagement.integrations.response.TaxDetailsResponse;
 
 public interface IDownStreamIntegration {
-    PriceDetailsResponse getBasePriceForProduct(String productId, String userId, String addressId) throws Exception;
+    PriceDetailsResponse getBasePriceForProduct(String productId, String userId) throws Exception;
 
     TaxDetailsResponse getTaxDetailsForProduct(Double price, String productId, String userId, String addressId) throws Exception;
 

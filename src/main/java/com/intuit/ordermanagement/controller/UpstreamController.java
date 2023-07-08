@@ -22,7 +22,7 @@ public class UpstreamController {
     public Object findFinalPrice(@RequestHeader String userId, @RequestParam String addressId, @PathVariable String productId) throws Exception {
         return productService.findFinalPriceForProducts(productId,userId,addressId);
     }
-    @PostMapping(value = "/placeOrder")
+    @PostMapping(value = "/order")
     public Object placeOrder(@RequestHeader String userId, @RequestBody PlaceOrderRequest placeOrderRequest) throws Exception {
         return productService.placeOrderForProducts(userId, placeOrderRequest);
     }
@@ -32,7 +32,8 @@ public class UpstreamController {
     }
     @PostMapping("/callback")
     public Object getCallbackForPayment(@RequestHeader String userId, @RequestBody CallbackPaymentRequest callbackPaymentRequest) throws Exception {
-        return productService.getPaymentCallback(userId, callbackPaymentRequest);
+        //TODO It will be consumed through queue
+        return productService.updatePaymentStatus(userId, callbackPaymentRequest);
     }
 
 

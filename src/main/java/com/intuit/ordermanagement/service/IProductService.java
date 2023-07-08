@@ -19,5 +19,5 @@ public interface IProductService {
 
     OrderMgmtAPIResponse getOrderStatus(String userId, String orderId);
 
-    OrderMgmtAPIResponse getPaymentCallback(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception;
+    OrderMgmtAPIResponse updatePaymentStatus(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception;
 }

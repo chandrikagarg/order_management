@@ -36,7 +36,7 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
     JsonHelperImpl jsonHelper;
 
     @Override
-    public PriceDetailsResponse getBasePriceForProduct(String productId, String userId, String addressId) throws Exception {
+    public PriceDetailsResponse getBasePriceForProduct(String productId, String userId) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.add("apiKey", "api-key");
         headers.add("apiPasscode", "api-passcode");
@@ -45,7 +45,6 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
 
         String url = buildDownStreamServiceUrl(DownStreamOperation.GET_PRICE_DETAILS);
         url = UriComponentsBuilder.fromHttpUrl(url)
-                .queryParam("addressId", addressId)
                 .queryParam("productId", productId)
                 .toUriString();
 

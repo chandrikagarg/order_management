@@ -4,7 +4,9 @@ CREATE TABLE order_user_details_mapping (
   order_id VARCHAR(50) NOT NULL,
   request_id VARCHAR(50) NOT NULL,
   amount DOUBLE NOT NULL,
-  address_id VARCHAR(50) NOT NULL
+  address_id VARCHAR(50) NOT NULL,
+  user_id VARCHAR(50) NOT NULL,
+  INDEXES on request_id and user_id
 );
 
 

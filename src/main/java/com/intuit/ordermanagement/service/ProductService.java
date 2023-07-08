@@ -57,11 +57,12 @@ public class ProductService implements IProductService{
     @Override
     public OrderMgmtAPIResponse findFinalPriceForProducts(String productId, String userId, String addressId) throws Exception {
 
-        PriceDetailsResponse priceDetailsResponse =  downStreamIntegration.getBasePriceForProduct(productId,userId,addressId);
+        PriceDetailsResponse priceDetailsResponse =  downStreamIntegration.getBasePriceForProduct(productId,userId);
         Double basePrice = priceDetailsResponse.getDataObject().getBasePrice();
         TaxDetailsResponse taxDetailsResponse = downStreamIntegration.getTaxDetailsForProduct(basePrice,productId,userId,addressId);
         Double tax = taxDetailsResponse.getDataObject().getTaxes();
         Map<String, Object> response = new HashMap<>();
+        //TODO page render framework for returning the response to front end
         response.put("basePrice", basePrice);
         response.put("tax", tax);
         response.put("totalPrice", basePrice + tax);
@@ -73,6 +74,7 @@ public class ProductService implements IProductService{
         String orderId = generateRandomId();
         String requestId = generateRandomId();
         OrderProductsMapping orderProductsMapping;
+        //TODO amount verify received from front end and calculate the final price on the basis of productId received
         try{
             orderProductsMapping = OrderProductsMapping.builder().productId(placeOrderRequest.getProductId()).orderId(orderId).productsStatus(OrderStatusEnum.INITIATED).build();
             OrderUserDetailsMapping orderUserDetailsMapping = OrderUserDetailsMapping.builder().orderId(orderId).requestId(requestId).amount(placeOrderRequest.getAmount()).addressId(placeOrderRequest.getAddressId()).build();
@@ -107,15 +109,17 @@ public class ProductService implements IProductService{
         OrderProductsMapping orderProductsMapping = orderProductsMappingDao.findByOrderId(orderId);
         OrderStatusEnum orderStatusEnum = orderProductsMapping.getProductsStatus();
         String message = getOrderStatusMessage(orderStatusEnum);
+        //TODO return proper order details response through page render
         Map<String, Object> response = new HashMap<>();
         response.put("status", orderStatusEnum.name());
         response.put("message", message);
+        response.put("details","details");
         return OrderMgmtAPIResponse.buildSuccess(response);
 
     }
 
     @Override
-    public OrderMgmtAPIResponse getPaymentCallback(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception {
+    public OrderMgmtAPIResponse updatePaymentStatus(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception {
         String paymentStatus = callbackPaymentRequest.getPaymentStatus();
         if(paymentStatus.equals(PaymentStatusEnum.SUCCESS.name())){
             String requestId = callbackPaymentRequest.getRequestId();
@@ -132,10 +136,9 @@ public class ProductService implements IProductService{
 
         }else if(paymentStatus.equals(PaymentStatusEnum.FAILED.name())){
             publishEventforSendingEmail(userId);
-
         }
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "CAllbackreceived successfullt");
+        response.put("message", "Callback received successfullt");
         return OrderMgmtAPIResponse.buildSuccess(response);
 
     }
@@ -143,6 +146,11 @@ public class ProductService implements IProductService{
     private void publishEventforSendingEmail(String userId) {
     }
 
+    /**
+     * on the basis of status return the message to the app
+     * @param orderStatusEnum
+     * @return
+     */
     private String getOrderStatusMessage(OrderStatusEnum orderStatusEnum) {
         return "Order placed successfully";
     }
