@@ -1,0 +1,21 @@
+@startuml
+autonumber
+    participant "App" as app #BBA5CD
+    participant "API Gateway" as api_gateway #CCF0EF
+    participant "Auth Svc" as auth_svc #CFE3AE
+    participant "OMS Svc" as oms_svc #F0EFCC
+    participant "Product Catalog Svc" as product_catalog #CEF0CC
+    participant "Tax Svc" as tax_svc #DFCCF0
+    participant "Order System" as order_system #F0CCE4
+    participant "Email System" as email_system #A5C9CD
+    participant "Database" as db #D1F093
+
+    app -> api_gateway:  GET oms/product/:productId/price?address=addressId
+    api_gateway -> auth_svc:  POST /authenticate
+    auth_svc -> api_gateway:  Return user details post authentication and embed the user info in the header
+    api_gateway -> oms_svc: GET /product/:productId/price?address=addressId
+    oms_svc -> product_catalog: Fetch the base price of the product
+    oms_svc -> tax_svc: Fetch tax on the base price of the product
+    oms_svc -> api_gateway: Return base_price + tax of the product
+    api_gateway -> app: forward the response to app
+@enduml

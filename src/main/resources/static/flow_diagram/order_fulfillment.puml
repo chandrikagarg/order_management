@@ -1,0 +1,38 @@
+@startuml
+autonumber
+    hide unlinked
+    participant "Payement Gateway" as payment_gateway #D1F093
+    participant "Queue" as queue #BBA5CD
+
+    participant "App" as app #BBA5CD
+    participant "API Gateway" as api_gateway #CCF0EF
+    participant "Auth Svc" as auth_svc #CFE3AE
+    participant "OMS Svc" as oms_svc #F0EFCC
+    participant "Product Catalog Svc" as product_catalog #CEF0CC
+    participant "Tax Svc" as tax_svc #DFCCF0
+    participant "Order System" as order_system #F0CCE4
+    participant "Email System" as email_system #A5C9CD
+    database "Database" as db #CFE3AE
+
+    payment_gateway -> queue:  Produces event once payment state reaches to terminal state (success | failed)
+    queue -> oms_svc:  consumes the event to update order status (success | failed)
+    alt payment is successful
+    |||
+                    oms_svc -> order_system:  Process order and bill the payment amount and will also be responsible for updating inventory side of things
+                    order_system -> oms_svc:  success
+                    oms_svc -> db: update order state to SUCCESS
+                    oms_svc -> queue: publish event to send mail for successfully placing the order
+queue-> email_system : send email
+
+    |||
+                end
+    alt payment failed
+    |||
+
+                    oms_svc -> db: update order state to FAILED
+oms_svc -> queue: publish event to send mail for unable to place the order
+queue-> email_system : send email
+
+    |||
+                end
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+autonumber
+    participant "App" as app #BBA5CD
+    participant "API Gateway" as api_gateway #CCF0EF
+    participant "Auth Svc" as auth_svc #CFE3AE
+    participant "OMS Svc" as oms_svc #F0EFCC
+    participant "Product Catalog Svc" as product_catalog #CEF0CC
+    participant "Tax Svc" as tax_svc #DFCCF0
+    participant "Order System" as order_system #F0CCE4
+    participant "Email System" as email_system #A5C9CD
+    participant "Payement Gateway" as payment_gateway #D1F093
+    database "Database" as db #D1F093
+
+    app -> api_gateway:  POST oms/order, Body -> addressId, ProductId
+    api_gateway -> auth_svc:  POST /authenticate
+    auth_svc -> api_gateway:  Return user details post authentication and embed the user info in the header
+    api_gateway -> oms_svc: POST /order, Body -> addressId, ProductId
+    oms_svc -> product_catalog: Fetch the base price of the product
+    oms_svc -> tax_svc: Fetch tax on the base price of the product
+    oms_svc -> db: Create Order(orderId, productId, requestId, addressId, amount, status=CREATED)
+    db -> oms_svc: success
+    oms_svc -> payment_gateway: register payment request for the order (orderId, requestId)
+    payment_gateway -> oms_svc: return success
+    oms_svc -> db: update order status = PAYMENT_REQ_ACK
+    db -> oms_svc: success
+    oms_svc -> api_gateway: return orderId and requestId
+    api_gateway -> app: forward the response to app
+    app -> payment_gateway: Get the payment details and initiate payment (requestId)
+    payment_gateway -> app: 200 OK \n { status: pending |success | failed }
+    app -> oms_svc: GET /order/:orderId
+    oms_svc -> app: return order details
+@enduml
