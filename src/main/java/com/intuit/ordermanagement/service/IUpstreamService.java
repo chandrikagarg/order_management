@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface IUpstreamService {
 
-    List<Product> findByCategory(CategoryEnum category);
+//    List<Product> findByCategory(CategoryEnum category);
 
     OrderMgmtAPIResponse findFinalPriceForProducts(String productId, String userId, String addressId) throws Exception;
 

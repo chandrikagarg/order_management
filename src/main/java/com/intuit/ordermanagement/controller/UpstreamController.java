@@ -14,10 +14,10 @@ public class UpstreamController {
     @Autowired
     IUpstreamService upstreamService;
 
-    @PostMapping(value = "/category")
-    public Object findAllProducts(@RequestParam String category){
-        return upstreamService.findByCategory(CategoryEnum.valueOf(category));
-    }
+//    @PostMapping(value = "/category")
+//    public Object findAllProducts(@RequestParam String category){
+//        return upstreamService.findByCategory(CategoryEnum.valueOf(category));
+//    }
     @GetMapping("/products/{productId}/price")
     public Object findFinalPrice(@RequestHeader String userId, @RequestParam String addressId, @PathVariable String productId) throws Exception {
         return upstreamService.findFinalPriceForProducts(productId,userId,addressId);

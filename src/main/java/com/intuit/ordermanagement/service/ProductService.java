@@ -5,28 +5,28 @@ import com.intuit.ordermanagement.core.dao.OrderUserDetailsMappingDao;
 import com.intuit.ordermanagement.core.dao.ProductsDao;
 import com.intuit.ordermanagement.core.entities.OrderProductsMapping;
 import com.intuit.ordermanagement.core.entities.OrderUserDetailsMapping;
-import com.intuit.ordermanagement.core.entities.Product;
 import com.intuit.ordermanagement.integrations.exceptions.OrderNotCreatedException;
+import com.intuit.ordermanagement.integrations.exceptions.OrderStatusException;
+import com.intuit.ordermanagement.integrations.exceptions.ProductDetailsException;
 import com.intuit.ordermanagement.integrations.request.CallbackPaymentRequest;
 import com.intuit.ordermanagement.integrations.request.OrderInitiationRequest;
 import com.intuit.ordermanagement.integrations.request.OrderSubmitRequest;
 import com.intuit.ordermanagement.integrations.request.PlaceOrderRequest;
 import com.intuit.ordermanagement.integrations.response.DownStreamServiceBaseResponse;
-import com.intuit.ordermanagement.integrations.response.MessageApiResponse;
 import com.intuit.ordermanagement.integrations.response.PriceDetailsResponse;
 import com.intuit.ordermanagement.integrations.response.TaxDetailsResponse;
 import com.intuit.ordermanagement.integrations.service.IDownStreamIntegration;
 import com.intuit.ordermanagement.integrations.utils.ErrorCode;
-import com.intuit.ordermanagement.service.enums.CategoryEnum;
+import com.intuit.ordermanagement.service.enums.ErrorCodeEnum;
 import com.intuit.ordermanagement.service.enums.OrderStatusEnum;
 import com.intuit.ordermanagement.service.enums.PaymentStatusEnum;
 import com.intuit.ordermanagement.service.response.OrderMgmtAPIResponse;
+import com.mysql.cj.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,18 +46,27 @@ public class ProductService implements IUpstreamService {
     @Autowired
     OrderProductsMappingDao orderProductsMappingDao;
 
-    @Override
-    public List<Product> findByCategory(CategoryEnum category) {
-       return  productsDao.findByCategory(category);
-    }
+//    @Override
+//    public List<Product> findByCategory(CategoryEnum category) {
+//       return  productsDao.findByCategory(category);
+//    }
 
     @Override
     public OrderMgmtAPIResponse findFinalPriceForProducts(String productId, String userId, String addressId) throws Exception {
         log.info("Request received for the productId {} userId{} and addressId {}",productId,userId,addressId);
+        if(StringUtils.isNullOrEmpty(productId) && StringUtils.isNullOrEmpty(addressId)){
+            throw new ProductDetailsException(new ErrorCode(ErrorCodeEnum.P_01.name(), ErrorCodeEnum.P_01.getMessage()));
+        }
         PriceDetailsResponse priceDetailsResponse =  downStreamIntegration.getBasePriceForProduct(productId,userId);
         Double basePrice = priceDetailsResponse.getDataObject().getBasePrice();
+        if(basePrice == null || basePrice <=0){
+            throw new ProductDetailsException(new ErrorCode(ErrorCodeEnum.P_02.name(), ErrorCodeEnum.P_02.getMessage()));
+        }
         TaxDetailsResponse taxDetailsResponse = downStreamIntegration.getTaxDetailsForProduct(basePrice,productId,userId,addressId);
         Double tax = taxDetailsResponse.getDataObject().getTaxes();
+        if(tax == null || tax <=0){
+            throw new ProductDetailsException(new ErrorCode(ErrorCodeEnum.P_03.name(), ErrorCodeEnum.P_03.getMessage()));
+        }
         Map<String, Object> response = new HashMap<>();
         //TODO page render framework for returning the response to front end
         response.put("basePrice", basePrice);
@@ -86,7 +95,7 @@ public class ProductService implements IUpstreamService {
             log.info("saved the order product mapping details for order id {}",orderId);
         }catch (Exception e){
             log.error("Error in creating the order {}",e.getMessage(),e);
-            throw new OrderNotCreatedException(new ErrorCode("UPS_01", "Unable to create order"));
+            throw new OrderNotCreatedException(new ErrorCode(ErrorCodeEnum.O_01.name(), ErrorCodeEnum.O_01.getMessage()));
         }
         OrderInitiationRequest orderInitiationRequest = OrderInitiationRequest.builder()
                 .requestId(requestId)
@@ -105,13 +114,15 @@ public class ProductService implements IUpstreamService {
             response.put("requestId",requestId);
             return OrderMgmtAPIResponse.buildSuccess(response);
         }
-        MessageApiResponse messageApiResponse = MessageApiResponse.builder().text("Error in creating order Please try again after some time").code("UPS_02").build();
-        return OrderMgmtAPIResponse.buildFailure(messageApiResponse);
+        throw new OrderNotCreatedException(new ErrorCode(ErrorCodeEnum.O_01.name(), ErrorCodeEnum.O_01.getMessage()));
     }
 
     @Override
     public OrderMgmtAPIResponse getOrderStatus(String userId, String orderId) {
         OrderProductsMapping orderProductsMapping = orderProductsMappingDao.findByOrderId(orderId);
+        if(orderProductsMapping == null){
+            throw new OrderNotCreatedException(new ErrorCode(ErrorCodeEnum.O_02.name(), ErrorCodeEnum.O_02.getMessage()));
+        }
         OrderStatusEnum orderStatusEnum = orderProductsMapping.getProductsStatus();
         String message = getOrderStatusMessage(orderStatusEnum);
         log.info("order status api message{} for order id {}",message,orderId);
@@ -126,11 +137,17 @@ public class ProductService implements IUpstreamService {
 
     @Override
     public OrderMgmtAPIResponse updatePaymentStatus(String userId, CallbackPaymentRequest callbackPaymentRequest) throws Exception {
+        if(callbackPaymentRequest == null){
+            throw new OrderStatusException(new ErrorCode(ErrorCodeEnum.O_05.name(),ErrorCodeEnum.O_05.getMessage()));
+        }
         String paymentStatus = callbackPaymentRequest.getPaymentStatus();
         String requestId = callbackPaymentRequest.getRequestId();
 
         log.info("Callback request received for user {} for requestid {}",userId,requestId);
         OrderUserDetailsMapping orderUserDetailsMapping = orderUserDetailsMappingDao.findByRequestId(requestId);
+        if(orderUserDetailsMapping == null){
+            throw new OrderStatusException(new ErrorCode(ErrorCodeEnum.O_03.name(), ErrorCodeEnum.O_03.getMessage()));
+        }
         OrderProductsMapping orderProductsMapping = orderProductsMappingDao.findByOrderId(orderUserDetailsMapping.getOrderId());
         if(paymentStatus.equals(PaymentStatusEnum.SUCCESS.name())){
             OrderSubmitRequest orderSubmitRequest = OrderSubmitRequest.builder()
@@ -139,8 +156,12 @@ public class ProductService implements IUpstreamService {
                     .orderId(orderUserDetailsMapping.getOrderId())
                     .amount(orderUserDetailsMapping.getAmount()).build();
             orderProductsMapping.setProductsStatus(OrderStatusEnum.PAYMENT_SUCCESS);
-            orderProductsMappingDao.save(orderProductsMapping);
-            log.info("Updated the order payment status to success for user {} for requestid {}",userId,requestId);
+            try{
+                orderProductsMappingDao.save(orderProductsMapping);
+                log.info("Updated the order payment status to success for user {} for requestid {}",userId,requestId);
+            }catch (Exception e){
+                throw new OrderStatusException(new ErrorCode(ErrorCodeEnum.O_04.name(), ErrorCodeEnum.O_04.getMessage()));
+            }
 
             downStreamIntegration.submitOrderForBilling(orderSubmitRequest, userId);
             log.info("Processed the order for billing for user {} and order Id {}",userId,orderUserDetailsMapping.getOrderId());

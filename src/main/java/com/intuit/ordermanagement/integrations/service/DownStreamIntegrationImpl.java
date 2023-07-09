@@ -118,13 +118,13 @@ public class DownStreamIntegrationImpl implements IDownStreamIntegration {
             CompletableFuture<ResponseEntity<String>> future = CompletableFuture.supplyAsync(() ->
                     restTemplate.exchange(finalurl, HttpMethod.POST, httpEntity, String.class), executor);
 
-            priceDetailsResponse = getDataResponse(future, DownStreamServiceBaseResponse.class, "DownStream Tax details  API Response");
+            priceDetailsResponse = getDataResponse(future, DownStreamServiceBaseResponse.class, "DownStream Submit order  details  API Response");
             return priceDetailsResponse;
 
         } catch (HttpClientErrorException e) {
             priceDetailsResponse = jsonHelper.fromJson(e.getResponseBodyAsString(), DownStreamServiceBaseResponse.class);
-            log.error("Downstream service Tax details   failure response : {}", jsonHelper.toJsonPretty(priceDetailsResponse), e);
-            throw new DownSTreamException(new ErrorCode("DOWN_STR_01", "Unable to hit Tax details downstream service"));
+            log.error("Submit order for billing failure response : {}", jsonHelper.toJsonPretty(priceDetailsResponse), e);
+            throw new DownSTreamException(new ErrorCode("DOWN_STR_01", "Something went bad while Submit order for billing  service"));
 
         }
     }
