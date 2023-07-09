@@ -1,6 +1,7 @@
 package com.intuit.ordermanagement.service.enums;
 
 public enum ErrorCodeEnum {
+    AUTH_01("User Id cannot be empty"),
     P_01("Product id or address id cannot be null"),
     P_02("Error in getting base price of the product"),
     P_03("Error in getting tax details price of the product"),
@@ -8,7 +9,9 @@ public enum ErrorCodeEnum {
     O_02("Order id does not exist"),
     O_03("Request id does not exist"),
     O_04("Unable to update the status of the order"),
-    O_05("Empty update payment status request received");
+    O_05("Empty update payment status request received"),
+    O_06("Order request cannot be empty");
+
 
 
 

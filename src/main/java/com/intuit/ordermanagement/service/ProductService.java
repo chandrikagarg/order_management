@@ -54,7 +54,7 @@ public class ProductService implements IUpstreamService {
     @Override
     public OrderMgmtAPIResponse findFinalPriceForProducts(String productId, String userId, String addressId) throws Exception {
         log.info("Request received for the productId {} userId{} and addressId {}",productId,userId,addressId);
-        if(StringUtils.isNullOrEmpty(productId) && StringUtils.isNullOrEmpty(addressId)){
+        if(StringUtils.isNullOrEmpty(productId) || StringUtils.isNullOrEmpty(addressId)){
             throw new ProductDetailsException(new ErrorCode(ErrorCodeEnum.P_01.name(), ErrorCodeEnum.P_01.getMessage()));
         }
         PriceDetailsResponse priceDetailsResponse =  downStreamIntegration.getBasePriceForProduct(productId,userId);
@@ -80,6 +80,9 @@ public class ProductService implements IUpstreamService {
         String orderId = generateRandomId();
         String requestId = generateRandomId();
         OrderProductsMapping orderProductsMapping;
+        if(placeOrderRequest == null){
+            throw  new OrderNotCreatedException(new ErrorCode(ErrorCodeEnum.O_06.name(),ErrorCodeEnum.O_06.getMessage()));
+        }
         //TODO amount verify received from front end and calculate the final price on the basis of productId received
         try{
             orderProductsMapping = OrderProductsMapping.builder().productId(placeOrderRequest.getProductId()).orderId(orderId).productsStatus(OrderStatusEnum.INITIATED).build();
