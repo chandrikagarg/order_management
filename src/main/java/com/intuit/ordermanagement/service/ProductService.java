@@ -145,7 +145,7 @@ public class ProductService implements IUpstreamService {
         }
         String paymentStatus = callbackPaymentRequest.getPaymentStatus();
         String requestId = callbackPaymentRequest.getRequestId();
-
+        //TODO terminal state status should not be updated again
         log.info("Callback request received for user {} for requestid {}",userId,requestId);
         OrderUserDetailsMapping orderUserDetailsMapping = orderUserDetailsMappingDao.findByRequestId(requestId);
         if(orderUserDetailsMapping == null){
